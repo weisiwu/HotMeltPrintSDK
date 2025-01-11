@@ -17,17 +17,11 @@ dependencies {
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     // 将 android-30 替换为你需要的 SDK 版本，如果不需要Android相关依赖则完全移除
     compileOnly files(System.getenv("ANDROID_SDK_ROOT") + "/platforms/android-30/android.jar")
-
 }
 
 jar { // 使用更简洁的 jar 任务配置
     archiveBaseName = "HotMeltPrint"
     archiveVersion = ""
-
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } // 包含依赖的 JAR 文件
-    }
-    from sourceSets.main.output // 包含编译后的类文件和资源文件
 
     manifest {
         attributes 'Implementation-Title': archiveBaseName,
