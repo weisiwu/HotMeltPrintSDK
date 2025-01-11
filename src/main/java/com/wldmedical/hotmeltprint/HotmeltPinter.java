@@ -10,7 +10,7 @@ import com.gprinter.utils.ConnMethod;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import androidx.annotation.Keep;
+//import androidx.annotation.Keep;
 import android.util.Log;
 
 public class HotmeltPinter implements HotmeltPinterInterface {
@@ -77,7 +77,6 @@ public class HotmeltPinter implements HotmeltPinterInterface {
     /**
      * 打印小票头部
      */
-    @Keep
     private void headerPrint() {
         System.out.println("wswTest【HotmeltPinter】 开始打印发票头部");
         esc.addInitializePrinter();
