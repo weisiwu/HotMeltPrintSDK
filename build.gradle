@@ -2,14 +2,16 @@ plugins {
     id 'java-library' // 使用 java-library 插件
 }
 
-java {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
-    google()
+    maven { url 'https://developer.huawei.com/repo/' }
+    maven { url 'https://maven.aliyun.com/repository/google' }
+    maven { url 'https://maven.aliyun.com/repository/central' }
+    maven { url 'https://maven.aliyun.com/repository/jcenter' }
+    maven { url "http://nexus.baijiayun.com/nexus/content/repositories/public/" }
 }
 
 dependencies {
@@ -19,12 +21,29 @@ dependencies {
     compileOnly files(System.getenv("ANDROID_SDK_ROOT") + "/platforms/android-30/android.jar")
 }
 
-jar { // 使用更简洁的 jar 任务配置
-    archiveBaseName = "HotMeltPrint"
-    archiveVersion = ""
+//jar {
+//    archiveBaseName = "HotMeltPrint"
+//    archiveVersion = "" // 或 null，如果不需要版本号
+//
+//    manifest {
+//        attributes([
+//                'Implementation-Title'     : archiveBaseName,
+//                'Implementation-Version' : archiveVersion
+//        ])
+//    }
+//}
 
-    manifest {
-        attributes 'Implementation-Title': archiveBaseName,
-                'Implementation-Version': archiveVersion
-    }
-}
+//jar {
+//    archiveBaseName = "HotMeltPrint"
+//    archiveVersion = project.version ?: "unspecified"
+//    archiveClassifier = 'release'
+//    archiveFileName = "${archiveBaseName}-${archiveVersion}-${archiveClassifier}.jar"
+//
+//    manifest {
+//        attributes 'Implementation-Title': archiveBaseName,
+//                'Implementation-Version': archiveVersion,
+//                'Created-By'           : "Gradle ${gradle.gradleVersion}",
+//                'Build-Jdk'            : "${System.getProperty('java.version')}"
+//    }
+//    dependsOn classes
+//}
