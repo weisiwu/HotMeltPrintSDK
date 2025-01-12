@@ -2,9 +2,6 @@ plugins {
     id 'java-library' // 使用 java-library 插件
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 repositories {
     mavenCentral()
     maven { url 'https://developer.huawei.com/repo/' }
@@ -17,33 +14,9 @@ repositories {
 dependencies {
     implementation "org.apache.commons:commons-math3:3.6.1"
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
-    // 将 android-30 替换为你需要的 SDK 版本，如果不需要Android相关依赖则完全移除
-    compileOnly files(System.getenv("ANDROID_SDK_ROOT") + "/platforms/android-30/android.jar")
 }
 
-//jar {
-//    archiveBaseName = "HotMeltPrint"
-//    archiveVersion = "" // 或 null，如果不需要版本号
-//
-//    manifest {
-//        attributes([
-//                'Implementation-Title'     : archiveBaseName,
-//                'Implementation-Version' : archiveVersion
-//        ])
-//    }
-//}
-
-//jar {
-//    archiveBaseName = "HotMeltPrint"
-//    archiveVersion = project.version ?: "unspecified"
-//    archiveClassifier = 'release'
-//    archiveFileName = "${archiveBaseName}-${archiveVersion}-${archiveClassifier}.jar"
-//
-//    manifest {
-//        attributes 'Implementation-Title': archiveBaseName,
-//                'Implementation-Version': archiveVersion,
-//                'Created-By'           : "Gradle ${gradle.gradleVersion}",
-//                'Build-Jdk'            : "${System.getProperty('java.version')}"
-//    }
-//    dependsOn classes
-//}
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
