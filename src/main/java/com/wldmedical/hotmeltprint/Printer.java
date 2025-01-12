@@ -35,10 +35,6 @@ public class Printer {
 
     // 获取连接状态
     public static boolean getConnectState() {
-         System.out.println("wswTest【HotmeltPinter】检查链接状态的portManager " + portManager);
-         if (portManager != null) {
-             System.out.println("wswTest【HotmeltPinter】检查链接状态的portManager.getConnectStatus() " + portManager.getConnectStatus());
-         }
          return portManager != null && portManager.getConnectStatus();
     }
 
@@ -48,18 +44,12 @@ public class Printer {
         executorService.execute(new Runnable() { // 使用匿名内部类
             @Override
             public void run() {
-                System.out.println("wswTest【HotmeltPinter】开始检查portManager");
                 if (portManager != null) {
-                    System.out.println("wswTest【HotmeltPinter】portManager非空");
                     portManager.closePort();
                 }
-                System.out.println("wswTest【HotmeltPinter】检查设备");
                 if (devices != null) {
-                    System.out.println("wswTest【HotmeltPinter】准备打开portManager");
                     portManager = new BluetoothPort(devices);
-                    Boolean tdd = portManager.openPort();
-                    System.out.println("wswTest【HotmeltPinter】链接后portManager" + BluetoothAdapter.checkBluetoothAddress("41:17:3A:F0:BF:9A"));
-                    System.out.println("wswTest【HotmeltPinter】是否能成功打开端口" + tdd);
+                    portManager.openPort();
                     // 连接成功后调用回调函数
                     callback.run();
                 }
@@ -125,10 +115,8 @@ public class Printer {
      * @return
      */
     public static void close() {
-        System.out.println("wswTest【HotmeltPinter】 准备关闭");
         if(portManager != null) {
             portManager.closePort();
-            System.out.println("wswTest【HotmeltPinter】 成功关闭！！！");
             portManager = null;
         }
     }
