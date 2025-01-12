@@ -53,12 +53,6 @@ public class Printer {
                     System.out.println("wswTest【HotmeltPinter】portManager非空");
                     portManager.closePort();
                 }
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    System.out.println("wswTest【HotmeltPinter】sleep error");
-                    e.printStackTrace();
-                }
                 System.out.println("wswTest【HotmeltPinter】检查设备");
                 if (devices != null) {
                     System.out.println("wswTest【HotmeltPinter】准备打开portManager");
