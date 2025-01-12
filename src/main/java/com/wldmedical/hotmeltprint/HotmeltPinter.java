@@ -2,6 +2,13 @@ package com.wldmedical.hotmeltprint;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.gprinter.bean.PrinterDevices;
 import com.gprinter.command.EscCommand;
@@ -11,6 +18,9 @@ import com.gprinter.utils.ConnMethod;
 import android.bluetooth.BluetoothAdapter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.Log;
 import android.content.Context;
 import android.os.Build.VERSION;
@@ -18,12 +28,17 @@ import android.os.Build.VERSION;
 public class HotmeltPinter extends AbstractHotmeltPinter {
     private final Printer printer = Printer.getInstance();
     private final EscCommand esc = new EscCommand();
-    private long queryInterval = 5050;
+    private static final long queryInterval = 5050;
     private String macAddress = "";
     TimeClass myObject = new TimeClass();
     String formattedDateTime = myObject.getCurrentFormattedDateTime();
-    private static final String TAG = "wswTestTAG Printer";
-
+    private static final String TAG = "WLDHotmeltPinter";
+    // 使用线程安全的 ConcurrentLinkedQueue 存储数据，允许多线程添加
+    private final ConcurrentLinkedQueue<Float> waveformData = new ConcurrentLinkedQueue<>();
+    // TODO: 2025/1/12 临时MOCK变量，后续删除
+    private ScheduledExecutorService mockDataScheduler; // 用于模拟数据生成的定时器
+    private double wavePhase = 0; // 正弦波相位
+    
     /**
      * 链接打印机
      * 1. 按照传入的mac地址，自动连接打印机设备
@@ -33,23 +48,18 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
         try {
             macAddress = mac;
             PrinterDevices blueTooth = new PrinterDevices.Build()
-                    .setContext(context)
-                    .setConnMethod(ConnMethod.BLUETOOTH)
-                    .setMacAddress(mac)
-                    .setCommand(Command.ESC)
-                    .build();
+                .setContext(context)
+                .setConnMethod(ConnMethod.BLUETOOTH)
+                .setMacAddress(mac)
+                .setCommand(Command.ESC)
+                .build();
 
             printer.connect(blueTooth, new Runnable() { // 转换为匿名内部类
                 @Override
                 public void run() {
-//                    try {
-//                        Thread.sleep(2000);
-                        if (autoPrint) {
-                            print();
-                        }
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
+                    if (autoPrint) {
+                        print();
+                    }
                 }
             });
         } catch (IllegalArgumentException e) {
@@ -66,8 +76,22 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
      */
     @Override
     public void print() {
+        // TODO:(wsw) 后续删除
+        startMockWaveformData();//启动mock数据
         headerPrint();
-        wavePrint();
+        wavePrintByTimer();
+    }
+
+    /**
+     * 数据更新入口，C++中将获取的数据通过此函数传递过来
+    */
+    @Override
+    public void update(float data) {
+        waveformData.offer(data); // 使用 offer() 方法添加，线程安全
+    }
+
+    private void clearWaveformData(){
+        waveformData.clear();
     }
 
     /**
@@ -117,6 +141,8 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
         esc.addText("序号: " + macAddress + "\n");
         esc.addText("********************************\n");
         esc.addText("\n");
+
+        // 小票头部立刻打印
         if (printer.getPortManager() != null) {
             try {
                 printer.getPortManager().writeDataImmediately(esc.getCommand());
@@ -131,9 +157,93 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
      * 启动一个协程，不停地从队列中处理数据（打印等）
      */
     private void wavePrint() {
-        // 定时查收指定地址数据，如有新数据，统一绘制
-        // GlobalScope.launch {
-        //     while (true) {
-        //         delay(queryInterval) // 每隔 1 秒处理
+        List<Float> dataToPrint = new ArrayList<>();
+        // 从线程安全队列中取出数据，并限制数量
+        int count = 0;
+        while (count < 500 && !waveformData.isEmpty()) {
+            Float data = waveformData.poll();//使用poll()方法，线程安全
+            if(data != null) {
+                dataToPrint.add(data);
+                count++;
+            }
+        }
+        if (!dataToPrint.isEmpty()) {
+            Bitmap bitmap = generateWaveformBitmap(dataToPrint);
+            if (esc != null) {
+                esc.drawImage(bitmap);
+                if (printer != null && printer.getPortManager() != null) {
+                    try {
+                        printer.getPortManager().writeDataImmediately(esc.getCommand());
+                    } catch (IOException e) {
+                        Log.e(TAG, "writeDataImmediately error: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } else {
+            System.out.println("No waveform data available, waiting...");
+        }
     }
+
+    /**
+     * 打印波形，定时器调用
+     */
+    private void wavePrintByTimer() {
+         // 使用 ScheduledExecutorService 模拟协程的定时执行
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                wavePrint();
+            }
+        }, 0, queryInterval, TimeUnit.MILLISECONDS);
+    }
+
+    private Bitmap generateWaveformBitmap(List<Float> data) {
+        int width = 400;
+        int height = 400;
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        canvas.drawColor(Color.WHITE);
+
+        Paint paint = new Paint();
+        paint.setColor(Color.BLACK);
+        paint.setStrokeWidth(2f);
+        paint.setAntiAlias(true);
+
+        float pointSpacing = (float) width / data.size();
+
+        for (int i = 0; i < data.size() - 1; i++) {
+            float startX = (float) (i * pointSpacing);
+            float startY = data.get(i) * 5;
+            float stopX = (float) ((i + 1) * pointSpacing);
+            float stopY = data.get(i + 1) * 5;
+
+            canvas.drawLine(startY, startX, stopY, stopX, paint);
+            System.out.println("wswTest 线的起点和终点XXX " + startX + " " + stopX);
+            System.out.println("wswTest 线的起点和终点YYY " + startY + " " + stopY);
+        }
+
+        return bitmap;
+    }
+
+    /**
+     * 开始模拟波形数据
+     */
+    private void startMockWaveformData() {
+        mockDataScheduler = Executors.newScheduledThreadPool(1);
+        mockDataScheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                // 生成正弦波数据
+                float waveValue = (float) (Math.sin(wavePhase) * 100); // 调整幅度 (100) 以控制波形高度
+                waveformData.offer(waveValue);
+                wavePhase += 0.1; // 调整相位增量以控制波形频率
+                if (wavePhase > 2 * Math.PI) {
+                    wavePhase -= 2 * Math.PI; // 防止相位无限增大
+                }
+            }
+        }, 0, 10, TimeUnit.MILLISECONDS); // 每 10ms 执行一次
+    }
+
 }

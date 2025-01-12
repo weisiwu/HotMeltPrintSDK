@@ -7,4 +7,6 @@ public interface HotmeltPinterInterface {
     void connect(String mac, Context context, boolean autoPrint);
 
     void print();
+
+    void update(float data);
 }

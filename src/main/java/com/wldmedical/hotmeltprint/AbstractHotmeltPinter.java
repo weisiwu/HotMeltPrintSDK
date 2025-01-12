@@ -12,4 +12,9 @@ public abstract class AbstractHotmeltPinter implements HotmeltPinterInterface {
     public void print() {
         System.out.println("Default print implementation in Java");
     }
+
+    @Override
+    public void update(float data) {
+        System.out.println("Default update implementation in Java");
+    }
 }
