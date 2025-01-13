@@ -35,9 +35,6 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
     private static final String TAG = "WLDHotmeltPinter";
     // 使用线程安全的 ConcurrentLinkedQueue 存储数据，允许多线程添加
     private final ConcurrentLinkedQueue<Float> waveformData = new ConcurrentLinkedQueue<>();
-    // TODO: 2025/1/12 临时MOCK变量，后续删除
-    // private ScheduledExecutorService mockDataScheduler; // 用于模拟数据生成的定时器
-    // private double wavePhase = 0; // 正弦波相位
     
     /**
      * 链接打印机
@@ -46,11 +43,13 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
     @Override
     public void connect(String mac, Context context, final boolean autoPrint) { // autoPrint 声明为 final
         try {
-            macAddress = mac;
+            BluetoothScanner scanner = new BluetoothScanner(context);
+            macAddress = scanner.scanForGPDevice();
+            System.out.println("wswTest 找到了？？？>>>" + macAddress);
             PrinterDevices blueTooth = new PrinterDevices.Build()
                 .setContext(context)
                 .setConnMethod(ConnMethod.BLUETOOTH)
-                .setMacAddress(mac)
+                .setMacAddress(macAddress)
                 .setCommand(Command.ESC)
                 .build();
 
@@ -76,8 +75,6 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
      */
     @Override
     public void print() {
-        // TODO:(wsw) 后续删除
-        // startMockWaveformData();//启动mock数据
         clearWaveformData();
         headerPrint();
         wavePrintByTimer();
@@ -88,7 +85,6 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
     */
     @Override
     public void update(float data) {
-        System.out.println("wswTEst更新的数据是 -------->" + data);
         waveformData.offer(data); // 使用 offer() 方法添加，线程安全
     }
 
@@ -226,24 +222,4 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
 
         return bitmap;
     }
-
-    /**
-     * 开始模拟波形数据
-     */
-    // private void startMockWaveformData() {
-    //     mockDataScheduler = Executors.newScheduledThreadPool(1);
-    //     mockDataScheduler.scheduleAtFixedRate(new Runnable() {
-    //         @Override
-    //         public void run() {
-    //             // 生成正弦波数据
-    //             float waveValue = (float) (Math.sin(wavePhase) * 100); // 调整幅度 (100) 以控制波形高度
-    //             waveformData.offer(waveValue);
-    //             wavePhase += 0.1; // 调整相位增量以控制波形频率
-    //             if (wavePhase > 2 * Math.PI) {
-    //                 wavePhase -= 2 * Math.PI; // 防止相位无限增大
-    //             }
-    //         }
-    //     }, 0, 10, TimeUnit.MILLISECONDS); // 每 10ms 执行一次
-    // }
-
 }
