@@ -44,11 +44,12 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
     public void connect(String mac, Context context, final boolean autoPrint) { // autoPrint 声明为 final
         try {
             BluetoothScanner scanner = new BluetoothScanner(context);
-            macAddress = scanner.scanForGPDevice();
-            System.out.println("wswTest 找到了？？？>>>" + macAddress);
+//            macAddress = scanner.scanForGPDevice();
+            macAddress = "41:17:3A:F0:BF:9A";
+            System.out.println("wswTest 开始链接打印机----->" + macAddress);
             PrinterDevices blueTooth = new PrinterDevices.Build()
                 .setContext(context)
-                .setConnMethod(ConnMethod.BLUETOOTH)
+                .setConnMethod(ConnMethod.BLE_BLUETOOTH)
                 .setMacAddress(macAddress)
                 .setCommand(Command.ESC)
                 .build();
