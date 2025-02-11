@@ -14,7 +14,7 @@ import com.gprinter.utils.Command;
 
 public class Printer {
     public static Printer printer=null;
-    public static BleBlueToothPort portManager = null;
+    public static BluetoothPort portManager = null;
     public static final PrinterDevices devices = null;
     private static final ExecutorService executorService = Executors.newCachedThreadPool();
 
@@ -29,7 +29,7 @@ public class Printer {
     }
 
     // 获取打印机管理类
-    public static BleBlueToothPort getPortManager() {
+    public static BluetoothPort getPortManager() {
         return portManager;
     }
 
@@ -48,7 +48,7 @@ public class Printer {
                     portManager.closePort();
                 }
                 if (devices != null) {
-                    portManager = new BleBlueToothPort(devices);
+                    portManager = new BluetoothPort(devices);
                     portManager.openPort();
                     // 连接成功后调用回调函数
                     callback.run();

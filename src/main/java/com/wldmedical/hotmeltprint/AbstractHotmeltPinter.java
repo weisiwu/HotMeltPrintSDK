@@ -4,7 +4,7 @@ import android.content.Context;
 
 public abstract class AbstractHotmeltPinter implements HotmeltPinterInterface {
     @Override
-    public void connect(String mac, Context context, boolean autoPrint) {
+    public void connect(String mac, boolean autoPrint) {
         System.out.println("Default connect implementation in Java: mac=" + mac + ", autoPrint=" + autoPrint);
     }
 

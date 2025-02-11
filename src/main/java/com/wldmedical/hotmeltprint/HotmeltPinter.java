@@ -35,21 +35,22 @@ public class HotmeltPinter extends AbstractHotmeltPinter {
     private static final String TAG = "WLDHotmeltPinter";
     // 使用线程安全的 ConcurrentLinkedQueue 存储数据，允许多线程添加
     private final ConcurrentLinkedQueue<Float> waveformData = new ConcurrentLinkedQueue<>();
-    
+
     /**
      * 链接打印机
      * 1. 按照传入的mac地址，自动连接打印机设备
      */
     @Override
-    public void connect(String mac, Context context, final boolean autoPrint) { // autoPrint 声明为 final
+     public void connect(String mac, final boolean autoPrint) { // autoPrint 声明为 final
         try {
-            BluetoothScanner scanner = new BluetoothScanner(context);
-//            macAddress = scanner.scanForGPDevice();
-            macAddress = "41:17:3A:F0:BF:9A";
-            System.out.println("wswTest 开始链接打印机----->" + macAddress);
+            // BluetoothScanner scanner = new BluetoothScanner(context);
+            // macAddress = scanner.scanForGPDevice();
+            macAddress = mac;
+            System.out.println("wswTest SDK 链接的外部设备是=>" + macAddress + ", autoPrint=" + autoPrint);
             PrinterDevices blueTooth = new PrinterDevices.Build()
-                .setContext(context)
-                .setConnMethod(ConnMethod.BLE_BLUETOOTH)
+                // .setContext(context)
+                // .setConnMethod(ConnMethod.BLE_BLUETOOTH)
+                .setConnMethod(ConnMethod.BLUETOOTH)
                 .setMacAddress(macAddress)
                 .setCommand(Command.ESC)
                 .build();
